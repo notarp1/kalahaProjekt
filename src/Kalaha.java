@@ -1,6 +1,4 @@
-import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Scanner;
 
 public class Kalaha {
@@ -94,94 +92,135 @@ public class Kalaha {
         boolean player1 = true;
         boolean winner = false;
         winnerGlobal = winner;
+        ArrayList<ArrayList<ArrayList<Integer>>> path;
 
 
         int board[] = {0, kugler, kugler ,kugler ,kugler ,kugler, kugler, 0, kugler, kugler, kugler, kugler, kugler, kugler};
-        boardGlobal = board;
+
         printBoard(board);
 
-        while(!winner){
+        while(!winner) {
             currentPlayer = player1;
 
-            if(player1){
-                System.out.println("Spiller 1 vælg nummer");
-            } else  System.out.println("Spiller 2 vælg nummer");
+            if (player1) {
 
-            int input = sc.nextInt();
+                path = evalMove(board, kugler);
+                player1 = false;
 
+            } else {
+                System.out.println("Spiller 2 vælg nummer");
 
-
-            int valg = board[input];
-            board[input] = 0;
-
-
-            for(int i = 1; i< valg+1; i++){
-                int val2 = input + i;
+                int input = sc.nextInt();
 
 
-                if(val2 > 13){
+                int valg = board[input];
+                board[input] = 0;
 
-                    val2 = val2 - 14;
+
+                for (int i = 1; i < valg + 1; i++) {
+                    int val2 = input + i;
+
+
+                    if (val2 > 13) {
+
+                        val2 = val2 - 14;
+                    }
+                    board[val2]++;
+
+
+                    if (i == valg) {
+
+                        if (!isWinner(kugler, winner, board)) {
+                            if (val2 == 0 || val2 == 7) {
+                                System.out.println("Extra tur");
+                            } else player1 = !player1;
+                        } else winner = true;
+
+                    }
                 }
-                board[val2] ++;
-
-
-
-                if(i == valg){
-
-                    if(!isWinner(kugler, winner, board)){
-                        if(val2 == 0 || val2 == 7){
-                            System.out.println("Extra tur");
-                        } else player1 = !player1;
-                    } else winner = true;
-
-                }
+                printBoard(board);
             }
-            printBoard(board);
         }
     }
 
-    private static int[][] evalMove(int[] boardGlobal){
-        int[] moves = {1, 2, 3, 4, 5, 6};
+    private static ArrayList<ArrayList<ArrayList<Integer>>> evalMove(int[] board, int kugler){
 
-        List<Integer> path = new ArrayList<>();
+        ArrayList<ArrayList<ArrayList<Integer>>> pathComplete = new ArrayList<>();
 
-        for(int j = 1; j<6; j++) {
-            int valg = j;
-            path.add(j);
-            int input = boardGlobal[valg];
-
-            for (int i = 1; i < valg + 1; i++) {
-                int val2 = input + i;
+        ArrayList<ArrayList<Integer>> path = new ArrayList<>();
+        ArrayList<Integer> cost = new ArrayList<>();
 
 
-                if (val2 > 13) {
-
-                    val2 = val2 - 14;
-                }
-                boardGlobal[val2]++;
 
 
-                if (i == valg) {
+        for (int j = 1; j < 7; j++) {
+            printBoard(board);
+            int[] boardApprox = board;
+            pathComplete.add(recursive(kugler, j, path, cost, boardApprox, false, 0));
 
-                    if (!isWinner(kuglerGlobal, winnerGlobal, boardGlobal)) {
-                        if (val2 == 0 || val2 == 7) {
-                            System.out.println("Extra tur");
-                        } else {
-                            currentPlayer = !currentPlayer;
-                            return [boardGlobal[7]][]
-                        }
-                    } else winnerGlobal = true;
+        }
+        return pathComplete;
 
-                }
-            }
+
+
+
+    }
+
+    private static ArrayList<ArrayList<Integer>> recursive(int kugler, int j, ArrayList<ArrayList<Integer>> cost, ArrayList<Integer> path, int[] board, boolean winner, int limit) {
+
+        if (limit >= 3) {
+            return cost;
         }
 
+
+
+                int input = j;
+                int valg = board[input];
+                board[input] = 0;
+                path.add(j);
+
+
+                for (int i = 1; i < valg + 1; i++) {
+                    int val2 = input + i;
+
+
+                    if (val2 > 13) {
+
+                        val2 = val2 - 14;
+                    }
+                    board[val2]++;
+
+
+                    if (i == valg) {
+
+                        cost.add(board[7], path);
+
+                        if (!isWinner(kugler, winner, board)) {
+
+                            if (val2 == 0 || val2 == 7) {
+                                limit = limit + 1;
+
+
+                                return recursive(kugler, j, cost, path, board, winner, limit);
+                            } else {
+                                if (input == 6) return cost;
+
+                            }
+                        } else {
+                            winnerGlobal = true;
+
+                            return cost;
+                        }
+
+                    }
+                }
+
+
+
+        return  cost;
     }
     private static boolean isWinner(int kugler, boolean winner, int[] board) {
-        System.out.println(board[0] + ": Board 0");
-        System.out.println(board[7] + ": Board 7");
-        System.out.println(kugler + ": Kugler");
+
         if(board[0] + board[7] == kugler * 12){
             winner = true;
             if(board[0] < board[7]){
